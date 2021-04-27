@@ -19,7 +19,11 @@ class GameController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {}
+  async index ({ request, response, view }) {
+    const games = await Game.all()
+
+    return games
+  }
 
   /**
    * Render a form to be used for creating a new game.

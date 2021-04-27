@@ -1,5 +1,7 @@
 'use strict'
 
+const Purchase = use('App/Models/Purchase')
+
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
@@ -17,7 +19,13 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index ({ params, request, response, view }) {
+    const purchases = await Purchase.query()
+      .where('user_id', params.user_id)
+      .with('user')
+      .fetch()
+
+    return purchases
   }
 
   /**
@@ -29,8 +37,7 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async create ({ request, response, view }) {
-  }
+  async create ({ request, response, view }) {}
 
   /**
    * Create/save a new purchase.
@@ -40,7 +47,15 @@ class PurchaseController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ params, request }) {
+    const data = request.only(['game_id', 'betnumbers', 'price'])
+    console.log(data)
+    const purchase = await Purchase.create({
+      ...data,
+      user_id: params.users_id
+    })
+
+    return purchase
   }
 
   /**
@@ -52,8 +67,7 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-  }
+  async show ({ params, request, response, view }) {}
 
   /**
    * Render a form to update an existing purchase.
@@ -64,8 +78,7 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async edit ({ params, request, response, view }) {
-  }
+  async edit ({ params, request, response, view }) {}
 
   /**
    * Update purchase details.
@@ -75,8 +88,7 @@ class PurchaseController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
-  }
+  async update ({ params, request, response }) {}
 
   /**
    * Delete a purchase with id.
@@ -86,7 +98,10 @@ class PurchaseController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params }) {
+    const purchase = await Purchase.findOrFail(params.id)
+
+    await purchase.delete()
   }
 }
 
