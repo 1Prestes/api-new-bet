@@ -21,8 +21,7 @@ class PurchaseController {
    */
   async index ({ params, request, response, view }) {
     const purchases = await Purchase.query()
-      .where('user_id', params.user_id)
-      .with('user')
+      .where('user_id', params.users_id)
       .fetch()
 
     return purchases
