@@ -23,9 +23,13 @@ Route.resource('users', 'UserController').only([
   'update',
   'destroy'
 ])
+
 Route.post('sessions', 'SessionController.store')
 
-Route.post('passwords', 'ForgotPasswordController.store')
+Route.resource('passwords', 'ForgotPasswordController').only([
+  'store',
+  'update'
+])
 
 Route.post('games', 'GameController.store')
 Route.get('games', 'GameController.index')
