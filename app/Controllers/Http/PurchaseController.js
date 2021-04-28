@@ -1,24 +1,9 @@
 'use strict'
 
 const Purchase = use('App/Models/Purchase')
+const Mail = use('Mail')
 
-/** @typedef {import('@adonisjs/framework/src/Request')} Request */
-/** @typedef {import('@adonisjs/framework/src/Response')} Response */
-/** @typedef {import('@adonisjs/framework/src/View')} View */
-
-/**
- * Resourceful controller for interacting with purchases
- */
 class PurchaseController {
-  /**
-   * Show a list of all purchases.
-   * GET purchases
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
   async index ({ params, request }) {
     const gameId = request.input('game_id')
     let myQuery = { user_id: params.users_id }
@@ -32,30 +17,25 @@ class PurchaseController {
     return purchases
   }
 
-  /**
-   * Create/save a new purchase.
-   * POST purchases
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store ({ request }) {
+  async store ({ request, auth }) {
     const data = request.input('bet')
     const purchase = await Purchase.createMany(data)
+    const user = await auth.getUser()
+
+    await Mail.send(
+      ['emails.new_bet', 'emails.new_bet-text'],
+      { username: user.username },
+      message => {
+        message
+          .to(user.email)
+          .from('admin@newbet.com', 'Admin | New Bet')
+          .subject('Welcome to New Bet')
+      }
+    )
 
     return purchase
   }
 
-  /**
-   * Display a single purchase.
-   * GET purchases/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
   async show ({ params }) {
     const purchase = await Purchase.query()
       .where({
@@ -67,14 +47,6 @@ class PurchaseController {
     return purchase
   }
 
-  /**
-   * Update purchase details.
-   * PUT or PATCH purchases/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
   async update ({ params, request, response }) {
     try {
       const purchase = await Purchase.findByOrFail({
@@ -96,14 +68,6 @@ class PurchaseController {
     }
   }
 
-  /**
-   * Delete a purchase with id.
-   * DELETE purchases/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
   async destroy ({ params }) {
     const purchase = await Purchase.findOrFail(params.id)
 
