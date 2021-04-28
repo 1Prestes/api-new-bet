@@ -33,8 +33,8 @@ Route.group(() => {
     'destroy'
   ])
 
-  Route.post('games', 'GameController.store')
-  Route.get('games', 'GameController.index')
+  Route.resource('games', 'GameController').apiOnly()
+  // Route.get('games', 'GameController.index')
 
   Route.resource('users.purchases', 'PurchaseController').apiOnly()
 }).middleware(['auth'])

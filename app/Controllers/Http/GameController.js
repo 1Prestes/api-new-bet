@@ -26,17 +26,6 @@ class GameController {
   }
 
   /**
-   * Render a form to be used for creating a new game.
-   * GET games/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {}
-
-  /**
    * Create/save a new game.
    * POST games
    *
@@ -68,18 +57,11 @@ class GameController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {}
+  async show ({ params }) {
+    const game = await Game.findByOrFail('id', params.id)
 
-  /**
-   * Render a form to update an existing game.
-   * GET games/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {}
+    return game
+  }
 
   /**
    * Update game details.
@@ -89,7 +71,26 @@ class GameController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {}
+  async update ({ params, request }) {
+    const game = await Game.findByOrFail('id', params.id)
+
+    if (game) {
+      const data = request.only([
+        'type',
+        'description',
+        'range',
+        'price',
+        'max_number',
+        'color',
+        'min_cart_value'
+      ])
+
+      game.merge(data)
+      await game.save()
+    }
+
+    return game
+  }
 
   /**
    * Delete a game with id.
@@ -99,7 +100,11 @@ class GameController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {}
+  async destroy ({ params }) {
+    const game = await Game.findByOrFail('id', params.id)
+
+    await game.delete()
+  }
 }
 
 module.exports = GameController
