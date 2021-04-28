@@ -19,24 +19,13 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ params, request, response, view }) {
+  async index ({ params }) {
     const purchases = await Purchase.query()
       .where('user_id', params.users_id)
       .fetch()
 
     return purchases
   }
-
-  /**
-   * Render a form to be used for creating a new purchase.
-   * GET purchases/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {}
 
   /**
    * Create/save a new purchase.
@@ -46,13 +35,9 @@ class PurchaseController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ params, request }) {
-    const data = request.only(['game_id', 'betnumbers', 'price'])
-    console.log(data)
-    const purchase = await Purchase.create({
-      ...data,
-      user_id: params.users_id
-    })
+  async store ({ request }) {
+    const data = request.input('bet')
+    const purchase = await Purchase.createMany(data)
 
     return purchase
   }
@@ -66,18 +51,16 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {}
+  async show ({ params }) {
+    const purchase = await Purchase.query()
+      .where({
+        id: params.id,
+        user_id: params.users_id
+      })
+      .fetch()
 
-  /**
-   * Render a form to update an existing purchase.
-   * GET purchases/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {}
+    return purchase
+  }
 
   /**
    * Update purchase details.
@@ -87,7 +70,26 @@ class PurchaseController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {}
+  async update ({ params, request, response }) {
+    try {
+      const purchase = await Purchase.findByOrFail({
+        id: params.id,
+        user_id: params.users_id
+      })
+
+      const data = request.only(['game_id', 'betnumbers', 'price'])
+
+      purchase.merge(data)
+
+      await purchase.save()
+
+      return purchase
+    } catch (error) {
+      return response
+        .status(error.status)
+        .send({ error: { message: 'Bet not found' } })
+    }
+  }
 
   /**
    * Delete a purchase with id.
