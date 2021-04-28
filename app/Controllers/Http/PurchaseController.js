@@ -19,9 +19,14 @@ class PurchaseController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ params }) {
+  async index ({ params, request }) {
+    const gameId = request.input('game_id')
+    let myQuery = { user_id: params.users_id }
+
+    if (gameId) myQuery = { ...myQuery, game_id: gameId }
+
     const purchases = await Purchase.query()
-      .where('user_id', params.users_id)
+      .where(myQuery)
       .fetch()
 
     return purchases
