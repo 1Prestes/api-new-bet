@@ -16,14 +16,6 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
 
-Route.resource('users', 'UserController').only([
-  'index',
-  'store',
-  'show',
-  'update',
-  'destroy'
-])
-
 Route.post('sessions', 'SessionController.store')
 
 Route.resource('passwords', 'ForgotPasswordController').only([
@@ -31,7 +23,18 @@ Route.resource('passwords', 'ForgotPasswordController').only([
   'update'
 ])
 
-Route.post('games', 'GameController.store')
-Route.get('games', 'GameController.index')
+Route.post('users', 'UserController.store')
 
-Route.resource('users.purchases', 'PurchaseController').apiOnly()
+Route.group(() => {
+  Route.resource('users', 'UserController').only([
+    'index',
+    'show',
+    'update',
+    'destroy'
+  ])
+
+  Route.post('games', 'GameController.store')
+  Route.get('games', 'GameController.index')
+
+  Route.resource('users.purchases', 'PurchaseController').apiOnly()
+}).middleware(['auth'])
