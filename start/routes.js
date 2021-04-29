@@ -16,25 +16,32 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
 
-Route.post('sessions', 'SessionController.store')
+Route.post('sessions', 'SessionController.store').validator('Session')
 
-Route.resource('passwords', 'ForgotPasswordController').only([
-  'store',
-  'update'
-])
+Route.post('passwords', 'ForgotPasswordController.store').validator(
+  'ForgotPassword'
+)
+Route.put('passwords', 'ForgotPasswordController.update').validator(
+  'ResetPassword'
+)
 
-Route.post('users', 'UserController.store')
+Route.post('users', 'UserController.store').validator('User')
 
 Route.group(() => {
-  Route.resource('users', 'UserController').only([
-    'index',
-    'show',
-    'update',
-    'destroy'
-  ])
+  Route.resource('users', 'UserController')
+    .only(['index', 'show', 'update', 'destroy'])
+    .validator(new Map([[['users.update'], ['User']]]))
 
-  Route.resource('games', 'GameController').apiOnly()
-  // Route.get('games', 'GameController.index')
+  Route.resource('games', 'GameController')
+    .apiOnly()
+    .validator(
+      new Map([
+        [['games.store'], ['Game']],
+        [['games.update'], ['Game']]
+      ])
+    )
 
-  Route.resource('users.purchases', 'PurchaseController').apiOnly()
+  Route.resource('users.purchases', 'PurchaseController')
+    .apiOnly()
+    .validator(new Map([[['users.purchases.update'], ['PurchaseUpdate']]]))
 }).middleware(['auth'])
