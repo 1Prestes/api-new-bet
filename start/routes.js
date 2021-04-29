@@ -30,7 +30,7 @@ Route.post('users', 'UserController.store').validator('User')
 Route.group(() => {
   Route.resource('users', 'UserController')
     .only(['index', 'show', 'update', 'destroy'])
-    .validator(new Map([[['users.update'], ['User']]]))
+    .validator(new Map([[['users.update'], ['UserUpdate']]]))
 
   Route.resource('games', 'GameController')
     .apiOnly()
