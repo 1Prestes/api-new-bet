@@ -12,19 +12,15 @@ class ForgotPasswordController {
     try {
       const email = request.input('email')
       const user = await User.findByOrFail('email', email)
-
       user.token = crypto.randomBytes(10).toString('hex')
       user.token_created_at = new Date()
 
       await user.save()
 
+      const { token } = user
       Kue.dispatch(
         Job.key,
-        {
-          email: user.email,
-          redirectUrl: request.input('redirect_url'),
-          token: user.token
-        },
+        { email, redirectUrl: request.input('redirect_url'), token },
         { attempts: 3 }
       )
     } catch (error) {

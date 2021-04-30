@@ -1,8 +1,10 @@
 'use strict'
 
-const Kue = use('Kue')
+// const Kue = use('Kue')
 const Purchase = use('App/Models/Purchase')
-const Job = use('App/Jobs/NewPurchaseMail')
+const Database = use('Database')
+
+// const Job = use('App/Jobs/NewPurchaseMail')
 
 class PurchaseController {
   async index ({ params, request }) {
@@ -18,21 +20,33 @@ class PurchaseController {
     return purchases
   }
 
-  async store ({ request, auth }) {
-    const data = request.input('bet')
-    const purchase = await Purchase.createMany(data)
-    const user = await auth.getUser()
+  async store ({ request, response, auth }) {
+    // const data = request.input('bet')
+    const games = Database.table('games').select('*')
+    console.log(games)
+    console.log('sdfasdfasdfasdf')
+    // data.map(async dt => {
+    //   const bet = dt.betnumbers.split(',')
+    //   if (bet.length === currentGame.max_number) {
+    //     return console.log('show ', bet)
+    //   } else {
+    //     return response.send({ error: { message: 'jogo invalido' } })
+    //   }
+    // })
 
-    Kue.dispatch(
-      Job.key,
-      {
-        email: user.email,
-        username: user.username
-      },
-      { attempts: 3 }
-    )
+    // const purchase = await Purchase.createMany(data)
+    // const user = await auth.getUser()
 
-    return purchase
+    // Kue.dispatch(
+    //   Job.key,
+    //   {
+    //     email: user.email,
+    //     username: user.username
+    //   },
+    //   { attempts: 3 }
+    // )
+
+    // return purchase
   }
 
   async show ({ params }) {
