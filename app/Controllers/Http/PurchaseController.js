@@ -1,7 +1,8 @@
 'use strict'
 
+const Kue = use('Kue')
 const Purchase = use('App/Models/Purchase')
-const Mail = use('Mail')
+const Job = use('App/Jobs/NewPurchaseMail')
 
 class PurchaseController {
   async index ({ params, request }) {
@@ -22,15 +23,13 @@ class PurchaseController {
     const purchase = await Purchase.createMany(data)
     const user = await auth.getUser()
 
-    await Mail.send(
-      ['emails.new_bet', 'emails.new_bet-text'],
-      { username: user.username },
-      message => {
-        message
-          .to(user.email)
-          .from('admin@newbet.com', 'Admin | New Bet')
-          .subject('Welcome to New Bet')
-      }
+    Kue.dispatch(
+      Job.key,
+      {
+        email: user.email,
+        username: user.username
+      },
+      { attempts: 3 }
     )
 
     return purchase
