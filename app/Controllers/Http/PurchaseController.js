@@ -1,10 +1,16 @@
 'use strict'
 
-// const Kue = use('Kue')
+const Kue = use('Kue')
+const Job = use('App/Jobs/NewPurchaseMail')
 const Purchase = use('App/Models/Purchase')
 const Database = use('Database')
 
-// const Job = use('App/Jobs/NewPurchaseMail')
+function hasDuplicatedNumber (array) {
+  const numbers = new Set()
+  array.map(num => numbers.add(Number(num)))
+
+  return numbers.size !== array.length
+}
 
 class PurchaseController {
   async index ({ params, request }) {
@@ -21,32 +27,48 @@ class PurchaseController {
   }
 
   async store ({ request, response, auth }) {
-    // const data = request.input('bet')
-    const games = Database.table('games').select('*')
-    console.log(games)
-    console.log('sdfasdfasdfasdf')
-    // data.map(async dt => {
-    //   const bet = dt.betnumbers.split(',')
-    //   if (bet.length === currentGame.max_number) {
-    //     return console.log('show ', bet)
-    //   } else {
-    //     return response.send({ error: { message: 'jogo invalido' } })
-    //   }
-    // })
+    const data = request.input('bet')
+    const games = await Database.table('games').select('*')
+    let error = false
 
-    // const purchase = await Purchase.createMany(data)
-    // const user = await auth.getUser()
+    data.map(dt => {
+      const betNumbers = dt.betnumbers.split(',')
+      const currentGameType = games.filter(game => game.id === dt.game_id)
 
-    // Kue.dispatch(
-    //   Job.key,
-    //   {
-    //     email: user.email,
-    //     username: user.username
-    //   },
-    //   { attempts: 3 }
-    // )
+      if (betNumbers.length !== currentGameType[0].max_number) {
+        error = true
+        return response.status(406).send({
+          error: {
+            message: `the game (${betNumbers}) is not compatible with type ${currentGameType[0].type}.`
+          }
+        })
+      }
 
-    // return purchase
+      if (hasDuplicatedNumber(betNumbers)) {
+        error = true
+        return response.status(406).send({
+          error: {
+            message: `the game (${betNumbers}) contains duplicate numbers.`
+          }
+        })
+      }
+    })
+
+    if (error) return
+
+    const purchase = await Purchase.createMany(data)
+    const user = await auth.getUser()
+
+    Kue.dispatch(
+      Job.key,
+      {
+        email: user.email,
+        username: user.username
+      },
+      { attempts: 3 }
+    )
+
+    return purchase
   }
 
   async show ({ params }) {
