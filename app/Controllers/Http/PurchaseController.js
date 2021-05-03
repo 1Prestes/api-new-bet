@@ -5,31 +5,39 @@ const Job = use('App/Jobs/NewPurchaseMail')
 const Purchase = use('App/Models/Purchase')
 const Database = use('Database')
 
-function hasDuplicatedNumber (array) {
-  const numbers = new Set()
-  array.map(num => numbers.add(Number(num)))
-
-  return numbers.size !== array.length
-}
-
 class PurchaseController {
-  async index ({ params, request }) {
-    const gameId = request.input('game_id')
-    let myQuery = { user_id: params.users_id }
+  async index ({ params, request, response }) {
+    try {
+      const gameId = request.input('game_id')
+      let myQuery = { user_id: params.users_id }
 
-    if (gameId) myQuery = { ...myQuery, game_id: gameId }
+      if (gameId) myQuery = { ...myQuery, game_id: gameId }
 
-    const purchases = await Purchase.query()
-      .where(myQuery)
-      .fetch()
+      const purchases = await Purchase.query()
+        .where(myQuery)
+        .fetch()
 
-    return purchases
+      return purchases
+    } catch (error) {
+      return response.status(error.status).send({
+        error: {
+          message: error.message
+        }
+      })
+    }
   }
 
   async store ({ request, response, auth }) {
     const data = request.input('bet')
     const games = await Database.table('games').select('*')
     let error = false
+
+    function hasDuplicatedNumber (array) {
+      const numbers = new Set()
+      array.map(num => numbers.add(Number(num)))
+
+      return numbers.size !== array.length
+    }
 
     data.map(dt => {
       const betNumbers = dt.betnumbers.split(',')
@@ -72,14 +80,25 @@ class PurchaseController {
   }
 
   async show ({ params }) {
-    const purchase = await Purchase.query()
-      .where({
-        id: params.id,
-        user_id: params.users_id
-      })
-      .fetch()
+    try {
+      const purchase = await Purchase.query()
+        .where({
+          id: params.id,
+          user_id: params.users_id
+        })
+        .fetch()
 
-    return purchase
+      return purchase
+    } catch (error) {
+      let message = 'Something went wrong. Try again or contact us'
+      if (error.status === 404) message = 'Purchase not found.'
+
+      return response.status(error.status).send({
+        error: {
+          message
+        }
+      })
+    }
   }
 
   async update ({ params, request, response }) {
@@ -103,10 +122,21 @@ class PurchaseController {
     }
   }
 
-  async destroy ({ params }) {
-    const purchase = await Purchase.findOrFail(params.id)
+  async destroy ({ params, response }) {
+    try {
+      const purchase = await Purchase.findOrFail(params.id)
 
-    await purchase.delete()
+      await purchase.delete()
+    } catch (error) {
+      let message = 'Something went wrong. Try again or contact us'
+      if (error.status === 404) message = 'Purchase not found.'
+
+      return response.status(error.status).send({
+        error: {
+          message
+        }
+      })
+    }
   }
 }
 

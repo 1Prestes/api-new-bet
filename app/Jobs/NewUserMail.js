@@ -16,7 +16,6 @@ class NewUserMail {
 
   // This is where the work is done.
   async handle ({ email, username }) {
-    console.log('aaa')
     await Mail.send(
       ['emails.welcome', 'emails.welcome-text'],
       { username },
