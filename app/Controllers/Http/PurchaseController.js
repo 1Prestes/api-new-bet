@@ -32,6 +32,8 @@ class PurchaseController {
   async store ({ request, response, auth }) {
     const data = request.input('bet')
     const games = await Database.table('games').select('*')
+    let templateMail = {}
+    let totalValue = 0
 
     try {
       for (let i = 0; i < data.length; i++) {
@@ -55,22 +57,37 @@ class PurchaseController {
             }
           })
         }
+
+        templateMail[currentGameType[0].type] = {
+          numbers: [
+            ...templateMail[currentGameType[0].type].numbers,
+            betNumbers
+          ]
+          // number: betnumbers,
+          // price: currentGameType[0].price
+        }
+        console.log(betNumbers)
+        totalValue += currentGameType[0].price
         data[i].user_id = auth.user.id
       }
+      return templateMail
+      // console.log(totalValue)
+      // const purchase = await Purchase.createMany(data)
+      // const user = await auth.getUser()
 
-      const purchase = await Purchase.createMany(data)
-      const user = await auth.getUser()
+      // Kue.dispatch(
+      //   Job.key,
+      //   {
+      //     email: user.email,
+      //     username: user.username,
+      //     games: games,
+      //     data: templateMail,
+      //     totalValue: totalValue
+      //   },
+      //   { attempts: 3 }
+      // )
 
-      Kue.dispatch(
-        Job.key,
-        {
-          email: user.email,
-          username: user.username
-        },
-        { attempts: 3 }
-      )
-
-      return purchase
+      // return purchase
     } catch (error) {
       return error
     }
