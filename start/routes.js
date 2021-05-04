@@ -28,9 +28,10 @@ Route.put('passwords', 'ForgotPasswordController.update').validator(
 Route.post('users', 'UserController.store').validator('User')
 
 Route.group(() => {
-  Route.resource('users', 'UserController')
-    .only(['index', 'show', 'update', 'destroy'])
-    .validator(new Map([[['users.update'], ['UserUpdate']]]))
+  Route.get('users', 'UserController.index')
+  Route.get('users/user', 'UserController.show')
+  Route.put('users', 'UserController.update').validator('UserUpdate')
+  Route.delete('users', 'UserController.destroy')
 
   Route.resource('games', 'GameController')
     .apiOnly()
@@ -41,7 +42,13 @@ Route.group(() => {
       ])
     )
 
-  Route.resource('users.purchases', 'PurchaseController')
-    .apiOnly()
-    .validator(new Map([[['users.purchases.update'], ['PurchaseUpdate']]]))
+  Route.get('users/purchases', 'PurchaseController.index')
+  Route.get('users/purchase', 'PurchaseController.show')
+  Route.post('users/purchases', 'PurchaseController.store')
+  Route.put('users/purchases', 'PurchaseController.update').validator('PurchaseUpdate')
+  Route.delete('users/purchases', 'PurchaseController.destroy')
+
+  // Route.resource('users.purchases', 'PurchaseController')
+  //   .apiOnly()
+  //   .validator(new Map([[['users.purchases.update'], ['PurchaseUpdate']]]))
 }).middleware(['auth'])

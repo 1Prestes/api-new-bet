@@ -9,6 +9,7 @@ class PurchaseUpdate {
 
   get rules () {
     return {
+      id: 'required',
       game_id: 'required',
       betnumbers: 'required',
       price: 'required'

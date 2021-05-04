@@ -5,16 +5,18 @@ const Job = use('App/Jobs/NewPurchaseMail')
 const Purchase = use('App/Models/Purchase')
 const Database = use('Database')
 
+function hasDuplicatedNumber (array) {
+  const numbers = new Set()
+  array.map(num => numbers.add(Number(num)))
+
+  return numbers.size !== array.length
+}
+
 class PurchaseController {
-  async index ({ params, request, response }) {
+  async index ({ response, auth }) {
     try {
-      const gameId = request.input('game_id')
-      let myQuery = { user_id: params.users_id }
-
-      if (gameId) myQuery = { ...myQuery, game_id: gameId }
-
       const purchases = await Purchase.query()
-        .where(myQuery)
+        .where('user_id', auth.user.id)
         .fetch()
 
       return purchases
@@ -30,63 +32,57 @@ class PurchaseController {
   async store ({ request, response, auth }) {
     const data = request.input('bet')
     const games = await Database.table('games').select('*')
-    let error = false
 
-    function hasDuplicatedNumber (array) {
-      const numbers = new Set()
-      array.map(num => numbers.add(Number(num)))
+    try {
+      for (let i = 0; i < data.length; i++) {
+        const betNumbers = data[i].betnumbers.split(',')
+        const currentGameType = games.filter(
+          game => game.id === data[i].game_id
+        )
 
-      return numbers.size !== array.length
+        if (betNumbers.length !== currentGameType[0].max_number) {
+          return response.status(406).send({
+            error: {
+              message: `the game (${betNumbers}) is not compatible with type ${currentGameType[0].type}.`
+            }
+          })
+        }
+
+        if (hasDuplicatedNumber(betNumbers)) {
+          return response.status(406).send({
+            error: {
+              message: `the game (${betNumbers}) contains duplicate numbers.`
+            }
+          })
+        }
+        data[i].user_id = auth.user.id
+      }
+
+      const purchase = await Purchase.createMany(data)
+      const user = await auth.getUser()
+
+      Kue.dispatch(
+        Job.key,
+        {
+          email: user.email,
+          username: user.username
+        },
+        { attempts: 3 }
+      )
+
+      return purchase
+    } catch (error) {
+      return error
     }
-
-    data.map(dt => {
-      const betNumbers = dt.betnumbers.split(',')
-      const currentGameType = games.filter(game => game.id === dt.game_id)
-
-      if (betNumbers.length !== currentGameType[0].max_number) {
-        error = true
-        return response.status(406).send({
-          error: {
-            message: `the game (${betNumbers}) is not compatible with type ${currentGameType[0].type}.`
-          }
-        })
-      }
-
-      if (hasDuplicatedNumber(betNumbers)) {
-        error = true
-        return response.status(406).send({
-          error: {
-            message: `the game (${betNumbers}) contains duplicate numbers.`
-          }
-        })
-      }
-    })
-
-    if (error) return
-
-    const purchase = await Purchase.createMany(data)
-    const user = await auth.getUser()
-
-    Kue.dispatch(
-      Job.key,
-      {
-        email: user.email,
-        username: user.username
-      },
-      { attempts: 3 }
-    )
-
-    return purchase
   }
 
-  async show ({ params }) {
+  async show ({ request, response, auth }) {
     try {
-      const purchase = await Purchase.query()
-        .where({
-          id: params.id,
-          user_id: params.users_id
-        })
-        .fetch()
+      const { id } = request.only(['id'])
+      const purchase = await Purchase.findByOrFail({
+        id: id,
+        user_id: auth.user.id
+      })
 
       return purchase
     } catch (error) {
@@ -101,11 +97,12 @@ class PurchaseController {
     }
   }
 
-  async update ({ params, request, response }) {
+  async update ({ request, response, auth }) {
     try {
+      const { id } = request.only(['id'])
       const purchase = await Purchase.findByOrFail({
-        id: params.id,
-        user_id: params.users_id
+        id: id,
+        user_id: auth.user.id
       })
 
       const data = request.only(['game_id', 'betnumbers', 'price'])
@@ -122,9 +119,13 @@ class PurchaseController {
     }
   }
 
-  async destroy ({ params, response }) {
+  async destroy ({ request, response, auth }) {
     try {
-      const purchase = await Purchase.findOrFail(params.id)
+      const { id } = request.only(['id'])
+      const purchase = await Purchase.findByOrFail({
+        id: id,
+        user_id: auth.user.id
+      })
 
       await purchase.delete()
     } catch (error) {
