@@ -47,8 +47,4 @@ Route.group(() => {
   Route.post('users/purchases', 'PurchaseController.store')
   Route.put('users/purchases', 'PurchaseController.update').validator('PurchaseUpdate')
   Route.delete('users/purchases', 'PurchaseController.destroy')
-
-  // Route.resource('users.purchases', 'PurchaseController')
-  //   .apiOnly()
-  //   .validator(new Map([[['users.purchases.update'], ['PurchaseUpdate']]]))
 }).middleware(['auth'])

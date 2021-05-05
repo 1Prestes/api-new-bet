@@ -17,9 +17,9 @@ class UserController {
     }
   }
 
-  async show ({ params, response }) {
+  async show ({ response, auth }) {
     try {
-      const user = await User.findOrFail(params.id)
+      const user = await User.findByOrFail('id', auth.user.id)
 
       return user
     } catch (error) {
@@ -49,9 +49,9 @@ class UserController {
     }
   }
 
-  async update ({ params, request, response }) {
+  async update ({ request, response, auth }) {
     try {
-      const user = await User.firstOrFail(params.id)
+      const user = await User.findByOrFail('id', auth.user.id)
       const data = request.only(['username', 'email', 'password'])
       user.merge(data)
       await user.save()
