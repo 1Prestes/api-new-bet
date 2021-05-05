@@ -3,7 +3,7 @@
 const Kue = use('Kue')
 const Job = use('App/Jobs/NewPurchaseMail')
 const Purchase = use('App/Models/Purchase')
-const Database = use('Database')
+const Game = use('App/Models/Game')
 
 function hasDuplicatedNumber (array) {
   const numbers = new Set()
@@ -40,7 +40,7 @@ class PurchaseController {
 
   async store ({ request, response, auth }) {
     const data = request.input('bet')
-    const games = await Database.table('games').select('*')
+    const games = (await Game.all()).toJSON()
     let templateMail = {}
     let totalValue = 0
 
