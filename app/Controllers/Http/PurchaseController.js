@@ -12,6 +12,15 @@ function hasDuplicatedNumber (array) {
   return numbers.size !== array.length
 }
 
+function formattedNumbers (array) {
+  const numbers = array.map(number => (number < 10 ? '0' + number : number))
+
+  return numbers
+    .toString()
+    .split(',')
+    .join(', ')
+}
+
 class PurchaseController {
   async index ({ response, auth }) {
     try {
@@ -58,36 +67,45 @@ class PurchaseController {
           })
         }
 
-        templateMail[currentGameType[0].type] = {
-          numbers: [
-            ...templateMail[currentGameType[0].type].numbers,
-            betNumbers
-          ]
-          // number: betnumbers,
-          // price: currentGameType[0].price
+        if (!templateMail[currentGameType[0].type]) {
+          templateMail[currentGameType[0].type] = {
+            type: currentGameType[0].type,
+            numbers: [formattedNumbers(betNumbers)],
+            price: currentGameType[0].price,
+            color: currentGameType[0].color
+          }
+        } else {
+          templateMail[currentGameType[0].type] = {
+            ...templateMail[currentGameType[0].type],
+            numbers: [
+              ...templateMail[currentGameType[0].type].numbers,
+              formattedNumbers(betNumbers)
+            ],
+            price:
+              templateMail[currentGameType[0].type]['price'] +
+              currentGameType[0].price
+          }
         }
-        console.log(betNumbers)
+
         totalValue += currentGameType[0].price
         data[i].user_id = auth.user.id
+        data[i].price = currentGameType[0].price
       }
-      return templateMail
-      // console.log(totalValue)
-      // const purchase = await Purchase.createMany(data)
-      // const user = await auth.getUser()
 
-      // Kue.dispatch(
-      //   Job.key,
-      //   {
-      //     email: user.email,
-      //     username: user.username,
-      //     games: games,
-      //     data: templateMail,
-      //     totalValue: totalValue
-      //   },
-      //   { attempts: 3 }
-      // )
+      const purchase = await Purchase.createMany(data)
+      const user = await auth.getUser()
 
-      // return purchase
+      Kue.dispatch(
+        Job.key,
+        {
+          email: user.email,
+          username: user.username,
+          data: templateMail,
+          totalValue: totalValue
+        },
+        { attempts: 3 }
+      )
+      return purchase
     } catch (error) {
       return error
     }

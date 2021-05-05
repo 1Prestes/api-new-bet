@@ -11,8 +11,7 @@ class Purchase {
     return {
       user_id: 'required',
       game_id: 'required',
-      betnumbers: 'required',
-      price: 'required'
+      betnumbers: 'required'
     }
   }
 

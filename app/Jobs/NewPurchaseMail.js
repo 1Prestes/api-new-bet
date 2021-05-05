@@ -15,10 +15,10 @@ class NewPurchaseMail {
   }
 
   // This is where the work is done.
-  async handle ({ email, username }) {
+  async handle ({ email, username, data, totalValue }) {
     await Mail.send(
       ['emails.new_bet', 'emails.new_bet-text'],
-      { username },
+      { username, data, totalValue },
       message => {
         message
           .to(email)
