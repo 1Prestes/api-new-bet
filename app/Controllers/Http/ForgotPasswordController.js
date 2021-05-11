@@ -24,9 +24,11 @@ class ForgotPasswordController {
         { attempts: 3 }
       )
     } catch (error) {
-      return response
-        .status(error.status)
-        .send({ error: { message: 'Deu ruim! email não encontrado.' } })
+      return response.status(error.status).send({
+        error: {
+          message: error.message
+        }
+      })
     }
   }
 
@@ -52,7 +54,9 @@ class ForgotPasswordController {
       await user.save()
     } catch (error) {
       return response.status(error.status).send({
-        error: { message: 'Deu ruim! não foi possivel resetar sua senha.' }
+        error: {
+          message: error.message
+        }
       })
     }
   }

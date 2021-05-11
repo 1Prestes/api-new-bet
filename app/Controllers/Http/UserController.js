@@ -11,7 +11,7 @@ class UserController {
     } catch (error) {
       return response.status(error.status).send({
         error: {
-          message
+          message: error.message
         }
       })
     }
@@ -34,7 +34,7 @@ class UserController {
     }
   }
 
-  async store ({ request }) {
+  async store ({ request, response }) {
     try {
       const data = request.only(['username', 'email', 'password'])
       const user = await User.create(data)

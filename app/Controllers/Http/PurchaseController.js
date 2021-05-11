@@ -41,7 +41,7 @@ class PurchaseController {
   async store ({ request, response, auth }) {
     const data = request.input('bet')
     const games = (await Game.all()).toJSON()
-    let templateMail = {}
+    const templateMail = {}
     let totalValue = 0
 
     try {
@@ -82,7 +82,7 @@ class PurchaseController {
               formattedNumbers(betNumbers)
             ],
             price:
-              templateMail[currentGameType[0].type]['price'] +
+              templateMail[currentGameType[0].type].price +
               currentGameType[0].price
           }
         }

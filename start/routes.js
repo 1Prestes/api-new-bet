@@ -45,6 +45,8 @@ Route.group(() => {
   Route.get('users/purchases', 'PurchaseController.index')
   Route.get('users/purchase', 'PurchaseController.show')
   Route.post('users/purchases', 'PurchaseController.store')
-  Route.put('users/purchases', 'PurchaseController.update').validator('PurchaseUpdate')
+  Route.put('users/purchases', 'PurchaseController.update').validator(
+    'PurchaseUpdate'
+  )
   Route.delete('users/purchases', 'PurchaseController.destroy')
 }).middleware(['auth'])
